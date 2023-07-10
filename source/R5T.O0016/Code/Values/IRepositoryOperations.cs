@@ -8,10 +8,9 @@ using R5T.L0042.T000;
 using R5T.T0131;
 using R5T.T0159;
 using R5T.T0184;
+using R5T.T0186.Extensions;
 using R5T.T0198.Extensions;
 using R5T.T0200.Extensions;
-
-using R5T.T0186.Extensions;
 
 
 namespace R5T.O0016
@@ -22,7 +21,8 @@ namespace R5T.O0016
         /// <summary>
         /// Verifies that the repository does not exist (checks both remote GitHub and local Git),
         /// then creates the remote repository and clones it locally.
-        /// A repository context is then provided
+        /// A gitignore file is added (and committed).
+        /// Finally, a repository context with all the remote and local repository properties is provided, against which operation can be run.
         /// </summary>
         public async Task In_New_RepositoryContext(
             IRepositoryName repositoryName,
@@ -57,6 +57,27 @@ namespace R5T.O0016
                             isPrivate),
                         Instances.GitHubRepositoryContextOperations.Clone_Repository(
                             localRepositoryDirectoryPath => innerRepositoryContext.LocalRepositoryDirectoryPath = localRepositoryDirectoryPath.ToLocalRepositoryDirectoryPath()),
+                        gitHubRepositoryContext =>
+                        {
+                            // Create the local git repository context.
+                            // Run the R5T.L0047.O001.ILocalGitRepositoryContextOperations.Add_GitIgnoreFile operation.
+                            return Instances.LocalRepositoryContextOperator.In_LocalRepositoryContext(
+                                gitHubRepositoryContext.RepositoryName,
+                                gitHubRepositoryContext.OwnerName,
+                                gitHubRepositoryContext.TextOutput,
+                                localRepositoryContext =>
+                                {
+                                    return Instances.GitOperator.In_CommitContext(
+                                        localRepositoryContext.DirectoryPath.Value,
+                                        Instances.CommitMessages.AddGitIgnoreFile.Value,
+                                        localRepositoryContext.TextOutput.Logger,
+                                        () =>
+                                        {
+                                            return localRepositoryContext.Run(
+                                                Instances.LocalGitRepositoryContextOperations.Add_GitIgnoreFile);
+                                        });
+                                });
+                        },
                         async gitHubRepositoryContext =>
                         {
                             innerRepositoryContext.RemoteRepositoryUrl = (await F0041.GitHubOperator.Instance.GetCloneUrl(
@@ -110,6 +131,9 @@ namespace R5T.O0016
             );
         }
 
+        /// <summary>
+        /// Only creates the repository, does not set the gitignore file!
+        /// </summary>
         public async Task Create_Repository(
             IRepositoryName repositoryName,
             IRepositoryDescription repositoryDescription,
