@@ -11,7 +11,7 @@ using R5T.T0184;
 using R5T.T0186.Extensions;
 using R5T.T0198.Extensions;
 using R5T.T0200.Extensions;
-
+using R5T.T0222;
 
 namespace R5T.O0016
 {
@@ -134,7 +134,7 @@ namespace R5T.O0016
         /// <summary>
         /// Only creates the repository, does not set the gitignore file!
         /// </summary>
-        public async Task Create_Repository(
+        public async Task Create_Repository_WithoutGitIgnore(
             IRepositoryName repositoryName,
             IRepositoryDescription repositoryDescription,
             IRepositoryOwnerName ownerName,
@@ -152,6 +152,67 @@ namespace R5T.O0016
                         repositoryDescription),
                     Instances.GitHubRepositoryContextOperations.Clone_Repository(
                         outputConsumer)
+                )
+            );
+        }
+
+        /// <summary>
+        /// Only creates the repository, does not set the gitignore file!
+        /// </summary>
+        public async Task Create_Repository_WithoutGitIgnore(
+            IRepositoryName repositoryName,
+            IRepositoryDescription repositoryDescription,
+            IRepositoryOwnerName ownerName,
+            bool isPrivate,
+            ITextOutput textOutput,
+            Action<L0036.T000.N001.IGitHubRepositoryContext, string> outputConsumer = default)
+        {
+            await Instances.RepositoryContextOperator.In_RepositoryContext(
+                repositoryName,
+                textOutput,
+                Instances.RepositoryContextOperations.Verify_DoesNotAlreadyExist(
+                    ownerName),
+                Instances.RepositoryContextOperations.In_GitHubRepositoryContext(
+                    ownerName.Value.ToGitHubRepositoryOwnerName(),
+                    Instances.GitHubRepositoryContextOperations.Create_RemoteRepository(
+                        repositoryDescription,
+                        isPrivate),
+                    Instances.GitHubRepositoryContextOperations.Clone_Repository(
+                        outputConsumer)
+                )
+            );
+        }
+
+        /// <summary>
+        /// Creates a repository and adds a gitignore file,
+        /// </summary>
+        public async Task Create_Repository_WithGitIgnore(
+            IRepositoryName repositoryName,
+            IRepositoryDescription repositoryDescription,
+            IRepositoryOwnerName ownerName,
+            bool isPrivate,
+            ITextOutput textOutput,
+            Action<L0036.T000.N001.IGitHubRepositoryContext, string> outputConsumer = default)
+        {
+            await Instances.RepositoryContextOperator.In_RepositoryContext(
+                repositoryName,
+                textOutput,
+                Instances.RepositoryContextOperations.Verify_DoesNotAlreadyExist(
+                    ownerName),
+                Instances.RepositoryContextOperations.In_GitHubRepositoryContext(
+                    ownerName.Value.ToGitHubRepositoryOwnerName(),
+                    Instances.GitHubRepositoryContextOperations.Create_RemoteRepository(
+                        repositoryDescription,
+                        isPrivate),
+                    Instances.GitHubRepositoryContextOperations.Clone_Repository(
+                        outputConsumer)
+                ),
+                Instances.RepositoryContextOperations.In_LocalGitRepositoryContext(
+                    repositoryName.Value.ToGitHubRepositoryName(),
+                    ownerName.Value.ToGitHubRepositoryOwnerName(),
+                    Instances.LocalGitRepositoryContextOperations.In_CommitContext(
+                        Instances.CommitMessages.AddGitIgnoreFile,
+                        Instances.LocalGitRepositoryContextOperations.Add_GitIgnoreFile)
                 )
             );
         }
