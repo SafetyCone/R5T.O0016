@@ -72,8 +72,8 @@ namespace R5T.O0016.O001
             };
 
             Instances.ActionOperator.Run(
-                repositoryContextAction,
-                context);
+                context,
+                repositoryContextAction);
         }
     }
 }
